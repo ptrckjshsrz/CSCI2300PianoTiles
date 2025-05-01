@@ -18,6 +18,16 @@ import javax.swing.Timer;
 
 public class PianoTile implements ActionListener, MouseListener{
     
+    private enum GameState {
+        TITLE,
+        PLAYING,
+        GAME_OVER
+    }
+    
+    private GameState gameState = GameState.TITLE;
+    private final String HIGH_SCORE_FILE = "highscore.txt";  
+    private long gameOverTime = 0;  
+
     public final static int COLUMNS = 3, ROWS = 3, TILE_WIDTH = 250, TILE_HEIGHT = 300;
 
     public static PianoTile dttwt;
@@ -29,7 +39,6 @@ public class PianoTile implements ActionListener, MouseListener{
     public boolean gameOver;
     public int highScore;
 
-    private final String HIGH_SCORE_FILE = "highscore.txt";
 
     public PianoTile() {
 
@@ -101,7 +110,7 @@ public class PianoTile implements ActionListener, MouseListener{
                     tiles.add(new Tile(x,y,false));
                 } else {
 
-                    tiles.add(new Tile(x,y, random.nextInt(3) == 0 || x == 2)); // 3 columns, 1/3 chance of being black
+                    tiles.add(new Tile(x,y, random.nextInt(2) == 0 || x == 2)); // 3 columns, 1/3 chance of being black
                 }
             }
         }
@@ -132,7 +141,15 @@ public class PianoTile implements ActionListener, MouseListener{
 
         g.setFont(new Font("Arial", 1, 100));
 
-        if (!gameOver) {
+        if (gameState == GameState.TITLE) {
+
+            g.setColor(Color.BLACK);
+            g.drawString("Piano Tiles", 100, 200);
+    
+            g.setFont(new Font("Arial", Font.PLAIN, 50));
+            g.drawString("Don't Touch the White Tiles!", 50, 300);
+            g.drawString("Click to Start", 150, 400);
+        } else if (gameState == GameState.PLAYING) {
 
             for (Tile tile : tiles) {
 
@@ -140,29 +157,46 @@ public class PianoTile implements ActionListener, MouseListener{
                 g.fillRect(tile.x * TILE_WIDTH, tile.y * TILE_HEIGHT - tile.animateY, TILE_WIDTH, TILE_HEIGHT);
                 g.setColor(tile.black ? Color.WHITE : Color.BLACK);
                 g.drawRect(tile.x * TILE_WIDTH, tile.y * TILE_HEIGHT - tile.animateY, TILE_WIDTH, TILE_HEIGHT);
-                
             }
-
+    
             g.setColor(Color.RED);
             g.drawString(String.valueOf(score), TILE_WIDTH, 100);
-        } else {
+
+        } else if (gameState == GameState.GAME_OVER) {
 
             g.setColor(Color.BLACK);
-            g.setFont(new Font("Arial", 1, 50));
-            g.drawString("Click to retry", 100, TILE_HEIGHT*2);
-            g.setFont(new Font("Arial", 1, 100));
+            g.setFont(new Font("Arial", Font.BOLD, 50));
+            g.drawString("Click to retry", 100, TILE_HEIGHT * 2);
+            g.setFont(new Font("Arial", Font.BOLD, 100));
             g.drawString("Game Over!", 100, TILE_HEIGHT);
-
-            g.setFont(new Font("Arial", 1, 40));
+            g.setFont(new Font("Arial", Font.PLAIN, 40));
             g.drawString("High Score: " + highScore, 100, TILE_HEIGHT * 2 + 100);
         }
     }
+
+    // MAIN --------------------------------------------------------
     public static void main(String[] args) {
         dttwt = new PianoTile();
     }   
 
     @Override
     public void mousePressed(MouseEvent e) {
+
+        if (gameState == GameState.TITLE) {
+            gameState = GameState.PLAYING;
+            start();
+            return;
+        }
+    
+        if (gameState == GameState.GAME_OVER) {
+            if (System.currentTimeMillis() - gameOverTime < 1000) {
+                return; // Ignore clicks for 1 second after game over
+            }
+            gameState = GameState.PLAYING;
+            start();
+            return;
+        }
+        if (gameState != GameState.PLAYING) return;
 
         boolean clicked = false;
 
@@ -220,12 +254,15 @@ public class PianoTile implements ActionListener, MouseListener{
                             }
                             
                         } else {
-                            gameOver = true;
+                            gameState = GameState.GAME_OVER;
+                            gameOverTime = System.currentTimeMillis();
                         }
 
                         clicked = true;
+
                     } else {
-                        gameOver = true;
+                        gameState = GameState.GAME_OVER;
+                        gameOverTime = System.currentTimeMillis();
                     }
                 }
             }
