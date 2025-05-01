@@ -5,6 +5,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -22,6 +27,9 @@ public class PianoTile implements ActionListener, MouseListener{
     public Random random;
     public int score, milSecDelay;
     public boolean gameOver;
+    public int highScore;
+
+    private final String HIGH_SCORE_FILE = "highscore.txt";
 
     public PianoTile() {
 
@@ -38,8 +46,35 @@ public class PianoTile implements ActionListener, MouseListener{
         frame.addMouseListener(this);
         frame.setResizable(false);
 
+        loadHighScore();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::saveHighScore));
+
         start();
         timer.start();
+    }
+
+    private void loadHighScore() {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(HIGH_SCORE_FILE))) {
+
+            highScore = Integer.parseInt(reader.readLine());
+
+        } catch (IOException | NumberFormatException e) {
+
+            highScore = 0;
+        }
+    }
+
+    private void saveHighScore() {
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(HIGH_SCORE_FILE))) {
+
+            writer.write(String.valueOf(highScore));
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
     }
 
     public void start() {
@@ -117,7 +152,9 @@ public class PianoTile implements ActionListener, MouseListener{
             g.drawString("Click to retry", 100, TILE_HEIGHT*2);
             g.setFont(new Font("Arial", 1, 100));
             g.drawString("Game Over!", 100, TILE_HEIGHT);
-            
+
+            g.setFont(new Font("Arial", 1, 40));
+            g.drawString("High Score: " + highScore, 100, TILE_HEIGHT * 2 + 100);
         }
     }
     public static void main(String[] args) {
@@ -154,6 +191,9 @@ public class PianoTile implements ActionListener, MouseListener{
                             }
 
                             score += Math.max(100 - milSecDelay, 10);
+                            if (score > highScore) {
+                                highScore = score;
+                            }
                                     //      System.out.println("scored " + score);
                             milSecDelay = 0;
                             boolean canBeBlack = true;

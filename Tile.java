@@ -11,6 +11,7 @@ public class Tile {
         this.black = black;
     }
 
+    // check tile position against mouse click position
     public boolean inTile(int x, int y) {
 
         int width = PianoTile.TILE_WIDTH;
