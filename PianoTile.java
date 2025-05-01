@@ -185,8 +185,8 @@ public class PianoTile implements ActionListener, MouseListener{
                                     tiles.remove(j);
                                 } 
 
-                                    tile.y++;
-                                    tile.animateY -= TILE_HEIGHT;
+                                    tiles.get(j).y++;
+                                    tiles.get(j).animateY -= TILE_HEIGHT;
                                     
                             }
 
